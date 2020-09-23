@@ -48,17 +48,25 @@ public class Catalog {
         // some code goes here
         int tableID = file.getId();
         int index = tableIDList.lastIndexOf(tableID);
-        if (index == -1) {
-            index = tableIDList.size();
-            tableIDList.add(index, tableID);
-            tableNameList.add(index, name);
-            pkeyFieldlist.add(index, pkeyField);
-            dbfileList.add(index, file);
-        } else {
-            tableIDList.set(index, tableID);
-            tableNameList.set(index, name);
-            pkeyFieldlist.set(index, pkeyField);
-            dbfileList.set(index, file);
+        boolean nameconflict = tableNameList.contains(name);
+        if(nameconflict == false) {
+            if (index == -1) {
+                index = tableIDList.size();
+                tableIDList.add(index, tableID);
+                tableNameList.add(index, name);
+                pkeyFieldlist.add(index, pkeyField);
+                dbfileList.add(index, file);
+            } else {
+                tableIDList.set(index, tableID);
+                tableNameList.set(index, name);
+                pkeyFieldlist.set(index, pkeyField);
+                dbfileList.set(index, file);
+            }
+        } else{
+            tableIDList.set(tableNameList.indexOf(name), tableID);
+            tableNameList.set(tableNameList.indexOf(name), name);
+            pkeyFieldlist.set(tableNameList.indexOf(name), pkeyField);
+            dbfileList.set(tableNameList.indexOf(name), file);
         }
     }
 
@@ -83,7 +91,11 @@ public class Catalog {
      */
     public int getTableId(String name) throws NoSuchElementException {
         // some code goes here
-        return tableIDList.contains();
+        if(tableNameList.contains(name) == true) {
+            return tableIDList.get(tableNameList.indexOf(name));
+        } else {
+            throw new NoSuchElementException("Name doesn't exist!");
+        }
     }
 
     /**
@@ -94,7 +106,12 @@ public class Catalog {
      */
     public TupleDesc getTupleDesc(int tableid) throws NoSuchElementException {
         // some code goes here
-        return null;
+        if(tableIDList.contains(tableid) == true) {
+            return dbfileList.get(tableIDList.indexOf(tableid)).getTupleDesc();
+        } else {
+            throw new NoSuchElementException("ID doesn't exist!");
+        }
+
     }
 
     /**
@@ -105,27 +122,30 @@ public class Catalog {
      */
     public DbFile getDatabaseFile(int tableid) throws NoSuchElementException {
         // some code goes here
-        return null;
+        return dbfileList.get(tableIDList.indexOf(tableid));
     }
 
     public String getPrimaryKey(int tableid) {
         // some code goes here
-        return null;
+        return pkeyFieldlist.get(tableIDList.indexOf(tableid));
     }
 
     public Iterator<Integer> tableIdIterator() {
         // some code goes here
-        return null;
+        return tableIDList.iterator();
     }
 
     public String getTableName(int id) {
         // some code goes here
-        return null;
+        return tableNameList.get(tableIDList.indexOf(id));
     }
     
     /** Delete all tables from the catalog */
     public void clear() {
-        // some code goes here
+        tableIDList = new ArrayList<Integer>(0);
+        tableNameList = new ArrayList<String>(0);
+        pkeyFieldlist = new ArrayList<String>(0);
+        dbfileList = new ArrayList<DbFile>(0);
     }
     
     /**
