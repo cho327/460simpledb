@@ -1,10 +1,9 @@
 package simpledb;
 
 import java.io.*;
+
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Map;
-
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -29,17 +28,23 @@ public class BufferPool {
     constructor instead. */
     public static final int DEFAULT_PAGES = 50;
 
+//    private static ArrayList<Page> pageList = new ArrayList<Page>(0);
+    private static HashMap<PageId,Page> pageHashMap = new HashMap<PageId,Page>(0,1);
+    private static int maxpages = 0;
+    // Tow different implementations
+    private int numPages=400;
+    private ConcurrentHashMap<PageId, Page> pageMap;
+
     /**
      * Creates a BufferPool that caches up to numPages pages.
      *
      * @param numPages maximum number of pages in this buffer pool.
      */
-    int numPages;
-    HashMap<PageId,Page> bufferPages;
     public BufferPool(int numPages) {
         // some code goes here
-    	this.numPages = numPages;
-    	bufferPages = new HashMap<PageId,Page>();
+        this.maxpages = numPages;
+        pageMap = new ConcurrentHashMap<PageId, Page>(0);
+        pageHashMap = new HashMap<PageId,Page>(0,1);
     }
     
     public static int getPageSize() {
@@ -71,24 +76,16 @@ public class BufferPool {
      * @param pid the ID of the requested page
      * @param perm the requested permissions on the page
      */
-    public  Page getPage(TransactionId tid, PageId pid, Permissions perm)
-        throws TransactionAbortedException, DbException {
-        // some code goes here
-    	if (bufferPages.containsKey(pid)) {
-    		return bufferPages.get(pid);
-    	}
-    	
-   		for (Map.Entry<Integer,Catalog.Table> check : Database.getCatalog().tableMap.entrySet()) {
-    		if ((pid.getTableId() == check.getValue().file.getId())) {
-    			if (bufferPages.size() >= numPages) {
-    				evictPage();
-    			}
-  				bufferPages.put(pid,check.getValue().file.readPage(pid));
-   				return bufferPages.get(pid);
-    		}
-    	}
-    	
-        throw new TransactionAbortedException();
+    public  Page getPage(TransactionId tid, PageId pid, Permissions perm) throws TransactionAbortedException, DbException {
+        if (!pageHashMap.containsKey(pid)) {
+            if (pageHashMap.size() == numPages)
+                evictPage();
+//            if (tid.toString() == "simpledb.TransactionId@33")
+//            	System.out.println("BufferPool getPage:  Trx id : " + tid + "  Page ID =" + pid );
+            pageHashMap.put(pid, Database.getCatalog().getDatabaseFile(pid.getTableId()).readPage(pid));
+            pageHashMap.get(pid).setBeforeImage();
+        }
+        return pageHashMap.get(pid);
     }
 
     /**
@@ -100,7 +97,7 @@ public class BufferPool {
      * @param tid the ID of the transaction requesting the unlock
      * @param pid the ID of the page to unlock
      */
-    public  void releasePage(TransactionId tid, PageId pid) {
+    public void releasePage(TransactionId tid, PageId pid) {
         // some code goes here
         // not necessary for lab1|lab2
     }

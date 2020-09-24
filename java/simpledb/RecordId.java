@@ -9,7 +9,8 @@ import java.io.Serializable;
 public class RecordId implements Serializable {
 
     private static final long serialVersionUID = 1L;
-
+    private final PageId pageId;
+    private final int tupleNo;
     /**
      * Creates a new RecordId referring to the specified PageId and tuple
      * number.
@@ -19,12 +20,10 @@ public class RecordId implements Serializable {
      * @param tupleno
      *            the tuple number within the page.
      */
-    PageId pid;
-    int tupleno;
     public RecordId(PageId pid, int tupleno) {
         // some code goes here
-    	this.pid = pid;
-    	this.tupleno = tupleno;
+        this.pageId = pid;
+        this.tupleNo = tupleno;
     }
 
     /**
@@ -32,7 +31,7 @@ public class RecordId implements Serializable {
      */
     public int tupleno() {
         // some code goes here
-        return tupleno;
+        return tupleNo;
     }
 
     /**
@@ -40,7 +39,7 @@ public class RecordId implements Serializable {
      */
     public PageId getPageId() {
         // some code goes here
-        return pid;
+        return pageId;
     }
 
     /**
@@ -52,12 +51,12 @@ public class RecordId implements Serializable {
     @Override
     public boolean equals(Object o) {
         // some code goes here
-        RecordId rIDobj;
-        if (o != null && o.getClass().equals(this.getClass())) {
-        	rIDobj = (RecordId) o;
-        	return (rIDobj.pid.equals(this.getPageId()) && rIDobj.tupleno == this.tupleno);
+        if(!(o instanceof RecordId)) {
+            return false;
         }
-        return false;
+        RecordId reCo = (RecordId) o;
+        return this.tupleNo == reCo.tupleNo && this.pageId.equals(reCo.pageId);
+
     }
 
     /**
@@ -69,10 +68,9 @@ public class RecordId implements Serializable {
     @Override
     public int hashCode() {
         // some code goes here
-        int pageHash = pid.hashCode();
-        int tupleNumHash = tupleno;
+        int pageHash = pageId.hashCode();
+        int tupleNumHash = tupleNo;
         return pageHash + tupleNumHash;
-
     }
 
 }
