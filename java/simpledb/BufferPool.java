@@ -153,8 +153,6 @@ public class BufferPool {
     	if (!pageMap.containsKey(pid)) {
             if (pageMap.size() == numPages)
                 evictPage();
-//            if (tid.toString() == "simpledb.TransactionId@33")
-//            	System.out.println("BufferPool getPage:  Trx id : " + tid + "  Page ID =" + pid );
             pageMap.put(pid, Database.getCatalog().getDatabaseFile(pid.getTableId()).readPage(pid));
             lruCache.put(pid);
             pageMap.get(pid).setBeforeImage();
@@ -294,7 +292,7 @@ public class BufferPool {
         // not necessary for lab1
     	ConcurrentHashMap.KeySetView<PageId, Page> keySetView = pageMap.keySet();
         Iterator<PageId> iterator = keySetView.iterator();
-
+        
         while (iterator.hasNext()) {
             PageId pid = iterator.next();
            //  output += key + "=>" + value + "; ";
@@ -337,6 +335,19 @@ public class BufferPool {
     public synchronized  void flushPages(TransactionId tid) throws IOException {
         // some code goes here
         // not necessary for lab1|lab2
+    	ConcurrentHashMap.KeySetView<PageId, Page> keySetView = pageMap.keySet();
+        Iterator<PageId> iterator = keySetView.iterator();
+        
+        while (iterator.hasNext()) {
+            PageId pid = iterator.next();
+            Page page = pageMap.get(pid);
+           //  output += key + "=>" + value + "; ";
+
+            if ((page.isDirty() != null) && (page.isDirty().equals(tid)))
+            	flushPage(pid);
+            
+        }
+
     }
 
     /**

@@ -43,10 +43,14 @@ public class Predicate implements Serializable {
         }
 
     }
-    
+
+    private int fieldIdx;
+    private Op op;
+    private Field fieldValue;
+
     /**
      * Constructor.
-     * 
+     *
      * @param field
      *            field number of passed in tuples to compare against.
      * @param op
@@ -56,6 +60,10 @@ public class Predicate implements Serializable {
      */
     public Predicate(int field, Op op, Field operand) {
         // some code goes here
+        fieldIdx = field;
+        this.op= op;
+        fieldValue = operand;
+
     }
 
     /**
@@ -64,7 +72,7 @@ public class Predicate implements Serializable {
     public int getField()
     {
         // some code goes here
-        return -1;
+        return fieldIdx;
     }
 
     /**
@@ -73,31 +81,32 @@ public class Predicate implements Serializable {
     public Op getOp()
     {
         // some code goes here
-        return null;
+        return op;
     }
-    
+
     /**
      * @return the operand
      */
     public Field getOperand()
     {
         // some code goes here
-        return null;
+        return fieldValue;
     }
-    
+
     /**
      * Compares the field number of t specified in the constructor to the
      * operand field specified in the constructor using the operator specific in
      * the constructor. The comparison can be made through Field's compare
      * method.
-     * 
+     *
      * @param t
      *            The tuple to compare against
      * @return true if the comparison is true, false otherwise.
      */
     public boolean filter(Tuple t) {
         // some code goes here
-        return false;
+        Field field = t.getField(fieldIdx);
+        return field.compare(op, fieldValue);
     }
 
     /**
@@ -106,6 +115,8 @@ public class Predicate implements Serializable {
      */
     public String toString() {
         // some code goes here
-        return "";
+        String result = "";
+        result = ("f = " + fieldIdx + " op = " + op.toString() + "operand = " + fieldValue.toString());
+        return result;
     }
 }
