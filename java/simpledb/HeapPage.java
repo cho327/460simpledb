@@ -22,6 +22,9 @@ public class HeapPage implements Page {
     byte[] oldData;
     private final Byte oldDataLock=new Byte((byte)0);
 
+    private TransactionId tid = null; // to mark page dirty
+    boolean dirty = false;
+
     /**
      * Create a HeapPage from a set of bytes of data read from disk.
      * The format of a HeapPage is a set of header bytes indicating
@@ -247,6 +250,29 @@ public class HeapPage implements Page {
     public void deleteTuple(Tuple t) throws DbException {
         // some code goes here
         // not necessary for lab1
+        RecordId rid = t.getRecordId();
+        PageId pid;
+        int tupleno;
+
+        // check recordId and get pid and tupleno
+        if (rid != null) {
+            pid = rid.getPageId();
+            tupleno = rid.tupleno();
+        }
+        else throw new DbException("RecordID not set");
+
+        // check pid
+        if (! pid.equals(this.pid)) throw new DbException("Tuple not on this Page");
+
+        // check the slot
+        if (isSlotUsed(tupleno))
+            markSlotUsed(tupleno, false);
+        else
+            throw new DbException("Tuple not on the slot on this page" + tupleno);
+
+        // update tuple array
+        tuples[tupleno] = null;
+        // DEBUG NOTE: will not pass deleteTuple test if setRecordId to null
     }
 
     /**
@@ -259,6 +285,22 @@ public class HeapPage implements Page {
     public void insertTuple(Tuple t) throws DbException {
         // some code goes here
         // not necessary for lab1
+        int tupleno = 0;
+
+        // check available slot and TupleDesc match
+        if ((getNumEmptySlots() == 0) || (! t.getTupleDesc().equals(this.td)))
+            throw new DbException("Page full or Tuple Desc not match!");
+
+        // find an empty slot to insert
+        for (tupleno =0; isSlotUsed(tupleno); tupleno++) { }
+
+        // update header byte
+        markSlotUsed(tupleno, true);
+        // update tuples array
+        tuples[tupleno] = t;
+
+        // set tuple recordId
+        tuples[tupleno].setRecordId(new RecordId(pid, tupleno));
     }
 
     /**
@@ -268,6 +310,8 @@ public class HeapPage implements Page {
     public void markDirty(boolean dirty, TransactionId tid) {
         // some code goes here
 	// not necessary for lab1
+        this.dirty = dirty;
+        if (dirty) this.tid = tid;
     }
 
     /**
@@ -276,7 +320,10 @@ public class HeapPage implements Page {
     public TransactionId isDirty() {
         // some code goes here
 	// Not necessary for lab1
-        return null;      
+        if (this.dirty)
+            return this.tid;
+        else
+            return null;
     }
 
     /**
@@ -313,6 +360,13 @@ public class HeapPage implements Page {
     private void markSlotUsed(int i, boolean value) {
         // some code goes here
         // not necessary for lab1
+        int byteIdx = Math.floorDiv(i, 8);
+        int offset = Math.floorMod(i, 8);
+
+        if (value) // mark 1
+            header[byteIdx] |= (1 << offset);
+        else // mark 0
+            header[byteIdx] &= ~(1 << offset);
     }
 
     /**
